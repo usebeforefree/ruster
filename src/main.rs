@@ -17,7 +17,8 @@ use tokio::io::{self, AsyncBufReadExt};
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Arc::new(Args::parse());
 
-    let subcommmand = subcommand::to_subcommand(args.command.clone())?;
+    let subcommand = subcommand::to_subcommand(args.command.clone())?;
+    subcommand.pre_run(&args.clone()).await.unwrap();
 
     // multiple consumer single producer pool
     let mut handles = Vec::new();
@@ -26,12 +27,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     for id in 0..args.threads {
         let rx = rx.clone();
-        let runnable = subcommmand.clone();
+        let subcommand = subcommand.clone();
         let args = args.clone();
 
         let handle = tokio::spawn(async move {
             while let Ok(word) = rx.recv().await {
-                if let Err(e) = runnable.process_word(&args, &word).await {
+                if let Err(e) = subcommand.process_word(&args, &word).await {
                     eprintln!("worker {id} request error: {e}");
                 }
             }

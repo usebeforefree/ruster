@@ -23,6 +23,10 @@ pub(crate) enum Subommand {
 
 #[async_trait]
 pub(crate) trait Subcommand: Send + Sync {
+    async fn pre_run(&self, _args: &Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        Ok(())
+    }
+
     async fn process_word(
         &self,
         args: &Args,
