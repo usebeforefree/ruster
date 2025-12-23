@@ -8,7 +8,7 @@ use crate::{
 
 use async_trait::async_trait;
 use clap::Parser;
-use http::uri::Authority;
+use http::{header::USER_AGENT, uri::Authority};
 use http_body_util::Empty;
 use hyper::Request;
 use hyper::body::Bytes;
@@ -20,6 +20,7 @@ use tokio::sync::OnceCell;
 #[derive(Clone, Parser)]
 #[command(about, long_about = None)]
 pub(crate) struct DirArgs {
+    // TODO
     /// HTTP status codes (e.g. 200-299,404,500)
     #[arg(long,
         value_delimiter = ',',
@@ -27,6 +28,7 @@ pub(crate) struct DirArgs {
         default_value = "404")]
     status_codes: Vec<StatusCodeRange>,
 
+    // TODO
     /// Negative status codes (overrides --status-codes if set)
     #[arg(long, value_delimiter = ',', value_parser = clap::value_parser!(StatusCodeRange))]
     status_codes_blacklist: Vec<StatusCodeRange>,
@@ -98,6 +100,7 @@ impl Subcommand for DirArgs {
         let req = Request::builder()
             .uri(full_path)
             .header(hyper::header::HOST, authority.as_str())
+            .header(USER_AGENT, &args.user_agent)
             .body(Empty::<Bytes>::new())?;
 
         let res = sender.send_request(req).await?;

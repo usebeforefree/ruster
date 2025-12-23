@@ -71,26 +71,32 @@ struct Args {
         default_value_t = String::from(concat!("buster ", env!("CARGO_PKG_VERSION"))))]
     user_agent: String,
 
+    // TODO
     /// Use random User-Agent strings
     #[arg(long, default_value_t = false)]
     random_agent: bool,
 
+    // TODO
     /// Proxy to use for requests [http(s)://host:port] or [socks5://host:port]
     #[arg(long, value_parser = proxy_parser)]
     proxy: Option<Uri>,
 
+    // TODO
     /// HTTP Timeout in Ms
     #[arg(long, default_value_t = 10_000)]
     timeout: u32,
 
+    // TODO
     /// Skip TLS certificate verification
     #[arg(short = 'k', long, default_value_t = false)]
     no_tls_validation: bool,
 
+    // TODO
     /// Should retry on request timeout
     #[arg(long, default_value_t = false)]
     retry: bool,
 
+    // TODO
     /// Times to retry on request timeout
     #[arg(long, default_value_t = 3)]
     retry_attempts: u32,
@@ -99,14 +105,17 @@ struct Args {
     #[arg(short, long, required = true, value_parser = url_parser)]
     url: Uri,
 
+    // TODO
     /// Cookies to use for the requests
     #[arg(short, long, value_parser = cookie_parser)]
     cookies: Option<CookieJar>,
 
+    // TODO
     /// Follow redirects
     #[arg(short = 'r', long, default_value_t = false)]
     follow_redirects: bool,
 
+    // TODO
     /// Headers to use for the requests
     #[arg(short = 'H', long)]
     headers: Option<String>,
@@ -115,14 +124,17 @@ struct Args {
     #[arg(short, long, default_value = "stdin")]
     wordlist: PathBuf,
 
+    // TODO
     /// Resume from a given position in the wordlist
     #[arg(long, default_value_t = 0)]
     wordlist_offset: usize,
 
+    // TODO
     /// HTTP method to use
     #[arg(short, long,  default_value_t = Method::GET)]
     method: Method,
 
+    // TODO
     /// Time each thread waits between requests in Ms
     #[arg(short, long, default_value_t = 0)]
     delay: u32,
@@ -131,6 +143,7 @@ struct Args {
     #[arg(short, long, default_value_t = 10)]
     threads: u8,
 
+    // TODO
     /// Path to output file
     #[arg(short, long, default_value = "stdout")]
     output: PathBuf,
