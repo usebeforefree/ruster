@@ -64,7 +64,7 @@ impl Subcommand for DirArgs {
     async fn process_word(
         &self,
         args: &Args,
-        _word: &str,
+        word: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let addr = self
             .addr
@@ -88,23 +88,18 @@ impl Subcommand for DirArgs {
             }
         });
 
-        // Build request
-        let path = args
-            .url
-            .path_and_query()
-            .map(|pq| pq.as_str())
-            .unwrap_or("/");
+        let base_path = args.url.path().trim_end_matches('/');
+
+        let full_path = format!("{}/{}", base_path, word);
 
         let req = Request::builder()
-            .uri(path)
+            .uri(full_path)
             .header(hyper::header::HOST, authority.as_str())
             .body(Empty::<Bytes>::new())?;
 
         let res = sender.send_request(req).await?;
 
-        let b = status_code_range::is_code_in_ranges(res.status(), &self.status_codes);
-
-        println!("Response: {}, in range: {}", res.status(), b);
+        let _b = status_code_range::is_code_in_ranges(res.status(), &self.status_codes);
 
         Ok(())
     }
