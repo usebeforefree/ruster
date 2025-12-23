@@ -21,7 +21,10 @@ use tokio::sync::OnceCell;
 #[command(about, long_about = None)]
 pub(crate) struct DirArgs {
     /// HTTP status codes (e.g. 200-299,404,500)
-    #[arg(long, value_delimiter = ',', value_parser = clap::value_parser!(StatusCodeRange))]
+    #[arg(long,
+        value_delimiter = ',',
+        value_parser = clap::value_parser!(StatusCodeRange),
+        default_value = "404")]
     status_codes: Vec<StatusCodeRange>,
 
     /// Negative status codes (overrides --status-codes if set)
