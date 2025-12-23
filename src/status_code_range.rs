@@ -8,7 +8,7 @@ pub(crate) struct StatusCodeRange {
 }
 
 impl StatusCodeRange {
-    /// Checks if the given code is inside the range (inclusive)
+    /// checks if the given code is inside the range (inclusive)
     pub(crate) fn contains(&self, code: StatusCode) -> bool {
         code >= self.start && code <= self.end
     }

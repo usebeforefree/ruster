@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         handles.push(handle);
     }
 
-    // read file
+    // read wordlist file
     let file = File::open(&args.wordlist).await?;
     let reader = io::BufReader::new(file);
     let mut wordlist = reader.lines();
@@ -50,7 +50,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         tx.send(word).await.unwrap();
     }
 
-    // Close channel
     drop(tx);
 
     for handle in handles {
@@ -202,7 +201,6 @@ fn cookie_parser(cookie_str: &str) -> Result<CookieJar, String> {
         let trimmed_cookie = cookie.trim();
 
         // Parse the cookie into a `Cookie` object
-        // TODO Can we somehow use the original String instead of copying?
         match Cookie::parse(trimmed_cookie.to_string()) {
             // Convert to String here
             Ok(parsed_cookie) => {
