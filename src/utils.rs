@@ -1,4 +1,4 @@
-use http::Method;
+use http::{HeaderName, HeaderValue, Method};
 use http::{header::USER_AGENT, uri::Authority};
 use http_body_util::Empty;
 use hyper::Request;
@@ -17,6 +17,7 @@ pub(crate) async fn make_request(
     authority: &Authority,
     path: &str,
     user_agent: &str,
+    headers: &Vec<(HeaderName, HeaderValue)>,
     follow_redirects: bool,
     max_redirects: u8,
 ) -> Result<Response<Incoming>, Box<dyn std::error::Error + Send + Sync>> {
@@ -37,13 +38,23 @@ pub(crate) async fn make_request(
             }
         });
 
-        // Build request
-        let req = Request::builder()
+        // TODO dont build from scratch every time
+        // build request
+        let req_builder = Request::builder()
             .method(method)
             .uri(&current_path)
             .header(hyper::header::HOST, authority.as_str())
-            .header(USER_AGENT, user_agent)
-            .body(Empty::<Bytes>::new())?;
+            .header(USER_AGENT, user_agent);
+
+        // merge user-provided headers
+        let req_builder = {
+            headers.iter().fold(req_builder, |builder, (name, value)| {
+                builder.header(name, value)
+            })
+        };
+
+        // build the request
+        let req = req_builder.body(Empty::<Bytes>::new())?;
 
         let res = sender.send_request(req).await?;
 
@@ -72,6 +83,7 @@ pub(crate) async fn make_request_with_timeout(
     authority: &Authority,
     path: &str,
     user_agent: &str,
+    headers: &Vec<(HeaderName, HeaderValue)>,
     follow_redirects: bool,
     max_redirects: u8,
     timeout_duration: Duration,
@@ -89,6 +101,7 @@ pub(crate) async fn make_request_with_timeout(
                 authority,
                 path,
                 user_agent,
+                headers,
                 follow_redirects,
                 max_redirects,
             ),

@@ -6,8 +6,10 @@ mod utils;
 use crate::subcommand::Subommand;
 
 use async_channel::bounded;
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use cookie::{Cookie, CookieJar};
+use http::header::USER_AGENT;
+use hyper::header::{HeaderName, HeaderValue};
 use hyper::{Method, Uri};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -127,9 +129,13 @@ struct Args {
     #[arg(long, default_value_t = 2)]
     max_redirects: u8,
 
-    /// TODO Headers to use for the requests
-    #[arg(short = 'H', long)]
-    headers: Option<String>,
+    /// Headers to use for the requests ["Key: Value,Key2: Value2"]
+    #[arg(short = 'H',
+        long,
+        value_delimiter = ',',
+        action = ArgAction::Append,
+        value_parser = header_parser)]
+    headers: Vec<(HeaderName, HeaderValue)>,
 
     /// Path to wordlist file
     #[arg(short, long, default_value = "stdin")]
@@ -176,6 +182,25 @@ struct Args {
 // //\\--debug Enable debug output. (bool flag, default: false)
 //
 //
+
+pub fn header_parser(
+    header_pair: &str,
+) -> Result<(HeaderName, HeaderValue), Box<dyn std::error::Error + Send + Sync>> {
+    let (key, value) = header_pair
+        .split_once(':')
+        .ok_or_else(|| format!("Invalid header format: {}", header_pair))?;
+
+    let name = HeaderName::from_bytes(key.trim().as_bytes())?;
+    let val = HeaderValue::from_str(value.trim())?;
+
+    if name == USER_AGENT {
+        return Err(
+            "User-Agent cannot be set in headers. Use the --user-agent flag instead.".into(),
+        );
+    }
+
+    Ok((name, val))
+}
 
 fn proxy_parser(s: &str) -> Result<Uri, String> {
     // Try to parse the string into a Uri
