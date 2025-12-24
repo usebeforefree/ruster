@@ -1,6 +1,7 @@
 mod dir;
 mod status_code_range;
 mod subcommand;
+mod utils;
 
 use crate::subcommand::Subommand;
 
@@ -81,10 +82,9 @@ struct Args {
     #[arg(long, value_parser = proxy_parser)]
     proxy: Option<Uri>,
 
-    // TODO
     /// HTTP Timeout in Ms
     #[arg(long, default_value_t = 10_000)]
-    timeout: u32,
+    timeout: u64,
 
     // TODO
     /// Skip TLS certificate verification

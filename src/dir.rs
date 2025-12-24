@@ -1,20 +1,15 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr, time::Duration};
 
 use crate::{
     Args,
     status_code_range::{self, StatusCodeRange},
     subcommand::Subcommand,
+    utils::make_request_with_timeout,
 };
 
 use async_trait::async_trait;
 use clap::Parser;
-use http::{header::USER_AGENT, uri::Authority};
-use http_body_util::Empty;
-use hyper::Request;
-use hyper::body::Bytes;
-use hyper::client::conn::http1::handshake;
-use hyper_util::rt::TokioIo;
-use tokio::net::TcpStream;
+use http::uri::Authority;
 use tokio::sync::OnceCell;
 
 #[derive(Clone, Parser)]
@@ -75,35 +70,22 @@ impl Subcommand for DirArgs {
             .addr
             .get()
             .expect("pre_run must be called before process_word");
-
         let authority = self
             .authority
             .get()
             .expect("pre_run must be called before process_word");
 
-        // TCP connection
-        let stream = TcpStream::connect(addr).await?;
-        let io = TokioIo::new(stream);
-
-        // Hyper handshake
-        let (mut sender, conn) = handshake::<_, Empty<Bytes>>(io).await?;
-        tokio::task::spawn(async move {
-            if let Err(err) = conn.await {
-                eprintln!("Connection failed: {:?}", err);
-            }
-        });
-
         let base_path = args.url.path().trim_end_matches('/');
-
         let full_path = format!("{}/{}", base_path, word);
 
-        let req = Request::builder()
-            .uri(full_path)
-            .header(hyper::header::HOST, authority.as_str())
-            .header(USER_AGENT, &args.user_agent)
-            .body(Empty::<Bytes>::new())?;
-
-        let res = sender.send_request(req).await?;
+        let res = make_request_with_timeout(
+            &addr,
+            &authority,
+            &full_path,
+            &args.user_agent,
+            Duration::from_millis(args.timeout),
+        )
+        .await?;
 
         let _b = status_code_range::is_code_in_ranges(res.status(), &self.status_codes);
 
