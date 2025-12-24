@@ -91,12 +91,10 @@ struct Args {
     #[arg(short = 'k', long, default_value_t = false)]
     no_tls_validation: bool,
 
-    // TODO
     /// Should retry on request timeout
     #[arg(long, default_value_t = false)]
     retry: bool,
 
-    // TODO
     /// Times to retry on request timeout
     #[arg(long, default_value_t = 3)]
     retry_attempts: u32,

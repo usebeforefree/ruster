@@ -84,6 +84,8 @@ impl Subcommand for DirArgs {
             &full_path,
             &args.user_agent,
             Duration::from_millis(args.timeout),
+            args.retry,
+            args.retry_attempts,
         )
         .await?;
 

@@ -48,13 +48,36 @@ pub(crate) async fn make_request_with_timeout(
     path: &str,
     user_agent: &str,
     timeout_duration: Duration,
+    retry: bool,
+    retry_attempts: u32,
 ) -> Result<Response<Incoming>, Box<dyn std::error::Error + Send + Sync>> {
-    let res = timeout(
-        timeout_duration,
-        make_request(addr, authority, path, user_agent),
-    )
-    .await
-    .map_err(|_| "request timed out")??;
+    let mut attempts = 0;
 
-    Ok(res)
+    loop {
+        let result = timeout(
+            timeout_duration,
+            make_request(addr, authority, path, user_agent),
+        )
+        .await;
+
+        match result {
+            // Completed within timeout
+            Ok(inner) => {
+                // Success or non-timeout error → return immediately
+                return inner;
+            }
+
+            // Timeout
+            Err(_) => {
+                if !retry || attempts >= retry_attempts {
+                    return Err("request timed out".into());
+                }
+
+                println!("Retry attempt");
+                attempts += 1;
+                // optional: add sleep/backoff later
+                continue;
+            }
+        }
+    }
 }
