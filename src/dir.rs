@@ -15,16 +15,14 @@ use tokio::sync::OnceCell;
 #[derive(Clone, Parser)]
 #[command(about, long_about = None)]
 pub(crate) struct DirArgs {
-    // TODO
-    /// HTTP status codes (e.g. 200-299,404,500)
+    /// TODO HTTP status codes (e.g. 200-299,404,500)
     #[arg(long,
         value_delimiter = ',',
         value_parser = clap::value_parser!(StatusCodeRange),
         default_value = "404")]
     status_codes: Vec<StatusCodeRange>,
 
-    // TODO
-    /// Negative status codes (overrides --status-codes if set)
+    /// TODO Negative status codes (overrides --status-codes if set)
     #[arg(long, value_delimiter = ',', value_parser = clap::value_parser!(StatusCodeRange))]
     status_codes_blacklist: Vec<StatusCodeRange>,
 

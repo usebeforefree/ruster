@@ -44,9 +44,6 @@ pub(crate) async fn make_request(
 
         let res = sender.send_request(req).await?;
 
-        println!("path = {}", path);
-        println!("status = {}", res.status());
-        println!("{:?}", res.status().is_redirection());
         // Check for redirect
         if follow_redirects && res.status().is_redirection() && redirects_followed < max_redirects {
             if let Some(location) = res.headers().get(hyper::header::LOCATION) {
