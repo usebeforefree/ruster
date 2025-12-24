@@ -86,7 +86,7 @@ struct Args {
     /// Set the User-Agent string
     #[arg(
         long,
-        default_value_t = String::from(concat!("buster ", env!("CARGO_PKG_VERSION"))))]
+        default_value_t = String::from(concat!("ruster ", env!("CARGO_PKG_VERSION"))))]
     user_agent: String,
 
     /// TODO Use random User-Agent strings
