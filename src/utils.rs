@@ -1,3 +1,4 @@
+use http::Method;
 use http::{header::USER_AGENT, uri::Authority};
 use http_body_util::Empty;
 use hyper::Request;
@@ -11,6 +12,7 @@ use tokio::time::{Duration, timeout};
 
 // This function makes a request and returns the response
 pub(crate) async fn make_request(
+    method: &Method,
     addr: &std::net::SocketAddr,
     authority: &Authority,
     path: &str,
@@ -37,6 +39,7 @@ pub(crate) async fn make_request(
 
         // Build request
         let req = Request::builder()
+            .method(method)
             .uri(&current_path)
             .header(hyper::header::HOST, authority.as_str())
             .header(USER_AGENT, user_agent)
@@ -64,6 +67,7 @@ pub(crate) async fn make_request(
 }
 
 pub(crate) async fn make_request_with_timeout(
+    method: &Method,
     addr: &std::net::SocketAddr,
     authority: &Authority,
     path: &str,
@@ -80,6 +84,7 @@ pub(crate) async fn make_request_with_timeout(
         let result = timeout(
             timeout_duration,
             make_request(
+                method,
                 addr,
                 authority,
                 path,

@@ -132,7 +132,7 @@ struct Args {
     #[arg(long, default_value_t = 0)]
     wordlist_offset: usize,
 
-    /// TODO HTTP method to use
+    /// HTTP method to use
     #[arg(short, long,  default_value_t = Method::GET)]
     method: Method,
 

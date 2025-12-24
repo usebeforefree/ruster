@@ -77,6 +77,7 @@ impl Subcommand for DirArgs {
         let full_path = format!("{}/{}", base_path, word);
 
         let res = make_request_with_timeout(
+            &args.method,
             &addr,
             &authority,
             &full_path,
