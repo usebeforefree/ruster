@@ -47,6 +47,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let reader = io::BufReader::new(file);
     let mut wordlist = reader.lines();
 
+    // skip the first `wordlist_offset` lines
+    for _ in 0..args.wordlist_offset {
+        if wordlist.next_line().await?.is_none() {
+            break;
+        }
+    }
+
+    // send the remaining words
     while let Some(word) = wordlist.next_line().await? {
         tx.send(word).await.unwrap();
     }
@@ -120,7 +128,7 @@ struct Args {
     #[arg(short, long, default_value = "stdin")]
     wordlist: PathBuf,
 
-    /// TODO Resume from a given position in the wordlist
+    /// Resume from a given position in the wordlist
     #[arg(long, default_value_t = 0)]
     wordlist_offset: usize,
 
