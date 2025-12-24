@@ -11,8 +11,10 @@ use cookie::{Cookie, CookieJar};
 use hyper::{Method, Uri};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::fs::File;
 use tokio::io::{self, AsyncBufReadExt};
+use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -35,6 +37,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             while let Ok(word) = rx.recv().await {
                 if let Err(e) = subcommand.process_word(&args, &word).await {
                     eprintln!("worker {id} request error: {e}");
+                }
+
+                // add delay between requests
+                if args.delay > 0 {
+                    sleep(Duration::from_millis(args.delay)).await;
                 }
             }
         });
@@ -136,9 +143,9 @@ struct Args {
     #[arg(short, long,  default_value_t = Method::GET)]
     method: Method,
 
-    /// TODO Time each thread waits between requests in Ms
+    /// Time each thread waits between requests in Ms
     #[arg(short, long, default_value_t = 0)]
-    delay: u32,
+    delay: u64,
 
     /// Number of concurrent threads
     #[arg(short, long, default_value_t = 10)]
