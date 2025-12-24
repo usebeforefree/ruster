@@ -108,10 +108,13 @@ struct Args {
     #[arg(short, long, value_parser = cookie_parser)]
     cookies: Option<CookieJar>,
 
-    // TODO
     /// Follow redirects
     #[arg(short = 'r', long, default_value_t = false)]
     follow_redirects: bool,
+
+    /// Number of redirects to follow (not guaranteed because requests can timeout)
+    #[arg(long, default_value_t = 2)]
+    max_redirects: u8,
 
     // TODO
     /// Headers to use for the requests

@@ -15,31 +15,55 @@ pub(crate) async fn make_request(
     authority: &Authority,
     path: &str,
     user_agent: &str,
+    follow_redirects: bool,
+    max_redirects: u8,
 ) -> Result<Response<Incoming>, Box<dyn std::error::Error + Send + Sync>> {
-    // TCP connection
-    let stream = TcpStream::connect(addr).await?;
-    let io = TokioIo::new(stream);
+    let mut current_path = path.to_string();
+    let mut redirects_followed: u8 = 0;
 
-    // Hyper handshake
-    let (mut sender, conn) = handshake::<_, Empty<Bytes>>(io).await?;
+    loop {
+        // TCP connection
+        let stream = TcpStream::connect(addr).await?;
+        let io = TokioIo::new(stream);
 
-    // Spawn the connection task
-    tokio::task::spawn(async move {
-        if let Err(err) = conn.await {
-            eprintln!("Connection failed: {:?}", err);
+        // Hyper handshake
+        let (mut sender, conn) = handshake::<_, Empty<Bytes>>(io).await?;
+
+        tokio::task::spawn(async move {
+            if let Err(err) = conn.await {
+                eprintln!("Connection failed: {:?}", err);
+            }
+        });
+
+        // Build request
+        let req = Request::builder()
+            .uri(&current_path)
+            .header(hyper::header::HOST, authority.as_str())
+            .header(USER_AGENT, user_agent)
+            .body(Empty::<Bytes>::new())?;
+
+        let res = sender.send_request(req).await?;
+
+        println!("path = {}", path);
+        println!("status = {}", res.status());
+        println!("{:?}", res.status().is_redirection());
+        // Check for redirect
+        if follow_redirects && res.status().is_redirection() && redirects_followed < max_redirects {
+            if let Some(location) = res.headers().get(hyper::header::LOCATION) {
+                let location = location.to_str()?;
+
+                // Update path (assumes same authority)
+                current_path = location.to_string();
+                redirects_followed += 1;
+
+                // Try again with new path
+                continue;
+            }
         }
-    });
 
-    // Build the request
-    let req = Request::builder()
-        .uri(path)
-        .header(hyper::header::HOST, authority.as_str())
-        .header(USER_AGENT, user_agent)
-        .body(Empty::<Bytes>::new())?;
-
-    // Send request and return response
-    let res = sender.send_request(req).await?;
-    Ok(res)
+        // Either not a redirect, redirects disabled, or limit reached
+        return Ok(res);
+    }
 }
 
 pub(crate) async fn make_request_with_timeout(
@@ -47,6 +71,8 @@ pub(crate) async fn make_request_with_timeout(
     authority: &Authority,
     path: &str,
     user_agent: &str,
+    follow_redirects: bool,
+    max_redirects: u8,
     timeout_duration: Duration,
     retry: bool,
     retry_attempts: u32,
@@ -56,7 +82,14 @@ pub(crate) async fn make_request_with_timeout(
     loop {
         let result = timeout(
             timeout_duration,
-            make_request(addr, authority, path, user_agent),
+            make_request(
+                addr,
+                authority,
+                path,
+                user_agent,
+                follow_redirects,
+                max_redirects,
+            ),
         )
         .await;
 

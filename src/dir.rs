@@ -83,6 +83,8 @@ impl Subcommand for DirArgs {
             &authority,
             &full_path,
             &args.user_agent,
+            args.follow_redirects,
+            args.max_redirects,
             Duration::from_millis(args.timeout),
             args.retry,
             args.retry_attempts,
